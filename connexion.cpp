@@ -32,10 +32,9 @@ void Connexion::on_pushButtonSeConnecter_clicked()
     qDebug()<<"connexion ok";
     QString txtRequeteConnexion = "SELECT COUNT(*) "
                                   "FROM Utilisateur "
-                                  "WHERE login ="+ui->lineEditId->text() + " "
+                                  "WHERE login ='"+ui->lineEditId->text() + "' "
                                   "AND motDePasse = PASSWORD('"+ ui->lineEditMdp->text() +"')";
     QSqlQuery requeteConnexion(txtRequeteConnexion);
-    qDebug()<<txtRequeteConnexion;
 
     // on fait notre requête
     requeteConnexion.first();

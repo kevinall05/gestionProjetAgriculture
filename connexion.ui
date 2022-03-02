@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Se connecter</string>
+   <string>Gestion projetAgriculture | Se connecter</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -94,7 +94,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEditId"/>
+      <widget class="QLineEdit" name="lineEditId">
+       <property name="text">
+        <string>Admin</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
@@ -135,6 +139,9 @@
      </item>
      <item>
       <widget class="QLineEdit" name="lineEditMdp">
+       <property name="text">
+        <string>Admin</string>
+       </property>
        <property name="echoMode">
         <enum>QLineEdit::Password</enum>
        </property>

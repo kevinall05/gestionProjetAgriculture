@@ -1,4 +1,3 @@
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "connexion.h"
@@ -18,16 +17,29 @@ MainWindow::MainWindow(QString noProd,QWidget *parent) :
     ui->setupUi(this);
     idAdmin=noProd;
 
+    // on désactive les boutons pour éviter des problèmes
+    ui->pushButtonActiver->setEnabled(false);
+    ui->pushButtonDesactiver->setEnabled(false);
+
+    // on charge les titres
+    setTitres();
+
+    // on vérifie si on cache les logs
+    cacherLesLogs();
+
     // QTableWidget responsive
     ui->tableWidgetRayons->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableWidgetVarietes->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableWidgetProduits->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableWidgetActivationProducteur->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableWidgetProducteurs->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     // on charge ce qu'on a besoin
     chargerInfos();
     chargerLesRayons();
     chargerLesVarietes();
     chargerLesProducteurs();
+    chargerLesProducteursEnAttente();
     chargerLesProduits();
 }
 
@@ -61,7 +73,7 @@ void MainWindow::chargerInfos()
     QString txtRequeteAdmin = "SELECT nom,prenom,Utilisateur.numeroTypeUtilisateur,TypeUtilisateur.libelleTypeUtilisateur "
                               "FROM Utilisateur "
                               "INNER JOIN TypeUtilisateur ON TypeUtilisateur.numeroTypeUtilisateur=Utilisateur.numeroTypeUtilisateur "
-                              "WHERE login = "+idAdmin;
+                              "WHERE login = '"+idAdmin+"'";
 
     // on fait la requête
     QSqlQuery requeteAdmin(txtRequeteAdmin);
@@ -124,8 +136,9 @@ void MainWindow::chargerLesProducteurs()
     // on récupère les producteurs
     int compteur = 0;
 
-    QString txtRequeteProducteurs = "SELECT numeroProducteur,nomProducteur,prenomProducteur,adresseProducteur,mailProducteur,telProducteur,numeroAbonnement "
-                                    "FROM Producteur";
+    QString txtRequeteProducteurs = "SELECT numeroProducteur,nomProducteur,prenomProducteur,adresseProducteur,mailProducteur,telProducteur,numeroAbonnement,estActif "
+                                    "FROM Producteur "
+                                    "WHERE estActif = 'O'";
     QSqlQuery requeteProducteurs(txtRequeteProducteurs);
 
     while(requeteProducteurs.next()) {
@@ -138,10 +151,32 @@ void MainWindow::chargerLesProducteurs()
         ui->tableWidgetProducteurs->setItem(compteur,5,new QTableWidgetItem(requeteProducteurs.value("telProducteur").toString()));
         ui->tableWidgetProducteurs->setItem(compteur,6,new QTableWidgetItem(requeteProducteurs.value("numeroAbonnement").toString()));
 
-
         compteur++;
     }
 }
+
+void MainWindow::chargerLesProducteursEnAttente()
+{
+    // on récupère les producteurs
+    int compteur = 0;
+
+    QString txtRequeteProducteurs = "SELECT numeroProducteur,nomProducteur,prenomProducteur,adresseProducteur,mailProducteur,telProducteur,estActif "
+                                    "FROM Producteur "
+                                    "WHERE estActif = 'N'";
+    QSqlQuery requeteProducteurs(txtRequeteProducteurs);
+
+    while(requeteProducteurs.next()) {
+        ui->tableWidgetActivationProducteur->insertRow(compteur);
+        ui->tableWidgetActivationProducteur->setItem(compteur,0,new QTableWidgetItem(requeteProducteurs.value("numeroProducteur").toString()));
+        ui->tableWidgetActivationProducteur->setItem(compteur,1,new QTableWidgetItem(requeteProducteurs.value("nomProducteur").toString()));
+        ui->tableWidgetActivationProducteur->setItem(compteur,2,new QTableWidgetItem(requeteProducteurs.value("prenomProducteur").toString()));
+        ui->tableWidgetActivationProducteur->setItem(compteur,3,new QTableWidgetItem(requeteProducteurs.value("adresseProducteur").toString()));
+        ui->tableWidgetActivationProducteur->setItem(compteur,4,new QTableWidgetItem(requeteProducteurs.value("mailProducteur").toString()));
+        ui->tableWidgetActivationProducteur->setItem(compteur,5,new QTableWidgetItem(requeteProducteurs.value("telProducteur").toString()));
+        compteur++;
+    }
+}
+
 
 void MainWindow::chargerLesProduits()
 {
@@ -165,3 +200,156 @@ void MainWindow::chargerLesProduits()
     }
 }
 
+void MainWindow::cacherLesLogs()
+{
+    qDebug()<<"void MainWindow::cacherLesLogs()";
+
+    // on vérifie le grade de l'utilisateur
+    QString txtRequeteVerif = "SELECT Utilisateur.numeroTypeUtilisateur,TypeUtilisateur.libelleTypeUtilisateur "
+                              "FROM Utilisateur "
+                              "INNER JOIN TypeUtilisateur ON TypeUtilisateur.numeroTypeUtilisateur=Utilisateur.numeroTypeUtilisateur "
+                              "WHERE login = '"+idAdmin+"'";
+
+    QSqlQuery requeteVerif(txtRequeteVerif);
+    // on exécute la requête
+    requeteVerif.first();
+
+    // on vérifie si le numéro du typeUtilisateur est différent de 1
+    if(requeteVerif.value("Utilisateur.numeroTypeUtilisateur").toInt() != 1) {
+        // on cache les logs
+        ui->tabWidget->removeTab(5);
+    }
+}
+
+void MainWindow::setTitres()
+{
+    qDebug()<<"void MainWindow::setTitres()";
+    // on va mettre les titres aux tableaux
+
+    // Producteurs
+    QStringList headersProducteurs;
+    headersProducteurs << "Numéro" << "Nom" << "Prénom" << "Adresse" << "E-mail" << "Téléphone";
+    ui->tableWidgetProducteurs->setColumnCount(headersProducteurs.count());
+    ui->tableWidgetProducteurs->setHorizontalHeaderLabels(headersProducteurs);
+
+    // Producteurs en attente
+    QStringList headersProducteursEnAttente;
+    headersProducteursEnAttente << "Numéro" << "Nom" << "Prénom" << "Adresse" << "E-mail" << "Téléphone";
+    ui->tableWidgetActivationProducteur->setColumnCount(headersProducteursEnAttente.count());
+    ui->tableWidgetActivationProducteur->setHorizontalHeaderLabels(headersProducteursEnAttente);
+
+    // Rayons
+    QStringList headersRayons;
+    headersRayons << "Numéro" << "Libellé";
+    ui->tableWidgetRayons->setColumnCount(headersRayons.count());
+    ui->tableWidgetRayons->setHorizontalHeaderLabels(headersRayons);
+
+    // Variétés des produits
+    QStringList headersVarietes;
+    headersVarietes << "Numéro" << "Libellé" << "Appartient au rayon";
+    ui->tableWidgetVarietes->setColumnCount(headersVarietes.count());
+    ui->tableWidgetVarietes->setHorizontalHeaderLabels(headersVarietes);
+
+    // Rayons
+    QStringList headersProduits;
+    headersProduits << "Numéro" << "Nom" << "Lien de l'image" << "Appartient à la variété" << "Plus d'infos";
+    ui->tableWidgetProduits->setColumnCount(headersProduits.count());
+    ui->tableWidgetProduits->setHorizontalHeaderLabels(headersProduits);
+}
+
+
+void MainWindow::on_pushButtonActiver_clicked()
+{
+    qDebug()<<"void MainWindow::on_pushButtonActiver_clicked()";
+    // activation du producteur sélectionné
+
+    // requête d'activation du producteur
+    QString txtActivationProducteur("UPDATE Producteur "
+                                    "SET estActif = 'O' "
+                                    "WHERE numeroProducteur = "+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),0)->text());
+    qDebug()<<txtActivationProducteur;
+    QSqlQuery activationProducteur(txtActivationProducteur);
+
+    QString txtMaxHistProd = "SELECT IFNULL(MAX(idHistProd)+1,1000) "
+                             "FROM historiqueProducteurs";
+    QSqlQuery maxHistProd(txtMaxHistProd);
+    maxHistProd.first();
+    qDebug()<<txtMaxHistProd;
+
+    // requête pour stocker dans l'historique
+    QString txtHistoriqueProducteur("INSERT INTO historiqueProducteurs (idHistProd,idProducteur,idAdmin,dateAction,heureAction,actionEffectue) "
+                                    "VALUES ("+maxHistProd.value(0).toString()+","+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),0)->text()+","+idAdmin+",DATE(NOW()),TIME(NOW())),'Activation du producteur'");
+    QSqlQuery historiqueProducteur(txtHistoriqueProducteur);
+    qDebug()<<txtHistoriqueProducteur;
+
+    ui->tableWidgetActivationProducteur->clear();
+    ui->tableWidgetActivationProducteur->setRowCount(0);
+
+    ui->tableWidgetProducteurs->clear();
+    ui->tableWidgetProducteurs->setRowCount(0);
+
+    // on recharge les labels des tableaux
+    setTitres();
+
+    // on recharge les tableaux
+    chargerLesProducteurs();
+    chargerLesProducteursEnAttente();
+}
+
+
+
+void MainWindow::on_tableWidgetProducteurs_cellClicked(int row, int column)
+{
+    // on active le bouton
+    ui->pushButtonDesactiver->setEnabled(1);
+    // on récupère dans les zones de saisies les informations
+    ui->lineEditProducteurNom->setText(ui->tableWidgetProducteurs->item(row,1)->text());
+    ui->lineEditProducteurPrenom->setText(ui->tableWidgetProducteurs->item(row,2)->text());
+    ui->lineEditProducteurAdresse->setText(ui->tableWidgetProducteurs->item(row,3)->text());
+    ui->lineEditProducteurEmail->setText(ui->tableWidgetProducteurs->item(row,4)->text());
+    ui->lineEditProducteurTelephone->setText(ui->tableWidgetProducteurs->item(row,5)->text());
+}
+
+void MainWindow::on_pushButtonDesactiver_clicked()
+{
+    qDebug()<<"void MainWindow::on_pushButtonDesactiver_clicked()";
+    // désactivation du producteur sélectionné
+
+    // requête d'désactivation du producteur
+    QString txtDesactivationProducteur("UPDATE Producteur "
+                                    "SET estActif = 'N' "
+                                    "WHERE numeroProducteur = "+ui->tableWidgetProducteurs->item(ui->tableWidgetProducteurs->currentRow(),0)->text());
+    qDebug()<<txtDesactivationProducteur;
+    QSqlQuery activationProducteur(txtDesactivationProducteur);
+
+    QString txtMaxHistProd = "SELECT IFNULL(MAX(idHistProd)+1,1000) "
+                             "FROM historiqueProducteurs";
+    QSqlQuery maxHistProd(txtMaxHistProd);
+    maxHistProd.first();
+    qDebug()<<txtMaxHistProd;
+
+    // requête pour stocker dans l'historique
+    QString txtHistoriqueProducteur("INSERT INTO historiqueProducteurs (idHistProd,idProducteur,idAdmin,dateAction,heureAction,actionEffectue) "
+                                    "VALUES ("+maxHistProd.value(0).toString()+","+ui->tableWidgetProducteurs->item(ui->tableWidgetProducteurs->currentRow(),0)->text()+","+idAdmin+",DATE(NOW()),TIME(NOW())),'Désactivation du producteur'");
+    QSqlQuery historiqueProducteur(txtHistoriqueProducteur);
+    qDebug()<<txtHistoriqueProducteur;
+
+    ui->tableWidgetActivationProducteur->clear();
+    ui->tableWidgetActivationProducteur->setRowCount(0);
+
+    ui->tableWidgetProducteurs->clear();
+    ui->tableWidgetProducteurs->setRowCount(0);
+
+    // on recharge les labels des tableaux
+    setTitres();
+
+    // on recharge les tableaux
+    chargerLesProducteurs();
+    chargerLesProducteursEnAttente();
+}
+
+void MainWindow::on_tableWidgetActivationProducteur_cellClicked(int row, int column)
+{
+    // on active le bouton Activer
+    ui->pushButtonActiver->setEnabled(1);
+}

@@ -19,9 +19,18 @@ public:
     void chargerLesRayons();
     void chargerLesVarietes();
     void chargerLesProducteurs();
+    void chargerLesProducteursEnAttente();
     void chargerLesProduits();
+    void cacherLesLogs();
+    void setTitres();
 
 private slots:
+
+    void on_pushButtonActiver_clicked();
+
+    void on_tableWidgetProducteurs_cellClicked(int row, int column);
+
+    void on_pushButtonDesactiver_clicked();
 
 private:
     Ui::MainWindow *ui;
