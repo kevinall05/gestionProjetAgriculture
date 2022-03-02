@@ -26,6 +26,7 @@ MainWindow::MainWindow(QString noProd,QWidget *parent) :
 
     // on vérifie si on cache les logs
     cacherLesLogs();
+    chargerLesLogs();
 
     // QTableWidget responsive
     ui->tableWidgetRayons->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -33,6 +34,7 @@ MainWindow::MainWindow(QString noProd,QWidget *parent) :
     ui->tableWidgetProduits->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableWidgetActivationProducteur->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableWidgetProducteurs->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableWidgetHistProducteurs->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     // on charge ce qu'on a besoin
     chargerInfos();
@@ -200,6 +202,29 @@ void MainWindow::chargerLesProduits()
     }
 }
 
+void MainWindow::chargerLesLogs()
+{
+    qDebug()<<"void MainWindow::chargerLesLogs()";
+
+    // on charge les logs
+    QString txtChargerLogs = "SELECT idHistProd, dateAction, heureAction, actionEffectue, nomUtil FROM historique";
+    QSqlQuery chargerLogs(txtChargerLogs);
+
+    int compteur = 0;
+
+    // on affiche les logs dans un tableau
+    while(chargerLogs.next()) {
+        ui->tableWidgetHistProducteurs->insertRow(compteur);
+        ui->tableWidgetHistProducteurs->setItem(compteur,0,new QTableWidgetItem(chargerLogs.value("idHistProd").toString()));
+        ui->tableWidgetHistProducteurs->setItem(compteur,1,new QTableWidgetItem(chargerLogs.value("dateAction").toString()+ " " + chargerLogs.value("heureAction").toString()));
+        ui->tableWidgetHistProducteurs->setItem(compteur,2,new QTableWidgetItem(chargerLogs.value("actionEffectue").toString()));
+        ui->tableWidgetHistProducteurs->setItem(compteur,3,new QTableWidgetItem(chargerLogs.value("nomUtil").toString()));
+
+        compteur ++;
+    }
+
+}
+
 void MainWindow::cacherLesLogs()
 {
     qDebug()<<"void MainWindow::cacherLesLogs()";
@@ -255,6 +280,12 @@ void MainWindow::setTitres()
     headersProduits << "Numéro" << "Nom" << "Lien de l'image" << "Appartient à la variété" << "Plus d'infos";
     ui->tableWidgetProduits->setColumnCount(headersProduits.count());
     ui->tableWidgetProduits->setHorizontalHeaderLabels(headersProduits);
+
+    // Historique producteurs
+    QStringList headersHistProducteurs;
+    headersHistProducteurs << "Numéro" << "Date/heure" << "Action effectuée" << "Fait par";
+    ui->tableWidgetHistProducteurs->setColumnCount(headersHistProducteurs.count());
+    ui->tableWidgetHistProducteurs->setHorizontalHeaderLabels(headersHistProducteurs);
 }
 
 
@@ -271,16 +302,16 @@ void MainWindow::on_pushButtonActiver_clicked()
     QSqlQuery activationProducteur(txtActivationProducteur);
 
     QString txtMaxHistProd = "SELECT IFNULL(MAX(idHistProd)+1,1000) "
-                             "FROM historiqueProducteurs";
+                             "FROM historique";
     QSqlQuery maxHistProd(txtMaxHistProd);
     maxHistProd.first();
-    qDebug()<<txtMaxHistProd;
 
     // requête pour stocker dans l'historique
-    QString txtHistoriqueProducteur("INSERT INTO historiqueProducteurs (idHistProd,idProducteur,idAdmin,dateAction,heureAction,actionEffectue) "
-                                    "VALUES ("+maxHistProd.value(0).toString()+","+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),0)->text()+","+idAdmin+",DATE(NOW()),TIME(NOW())),'Activation du producteur'");
+    QString txtHistoriqueProducteur("INSERT INTO historique(idHistProd,dateAction,heureAction,actionEffectue,nomUtil) "
+                                    "VALUES ("+maxHistProd.value(0).toString()+",DATE(NOW()),TIME(NOW()),'Activation du producteur n°"+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),0)->text()+" nommé "+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),1)->text()+" "+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),2)->text()+"','"+idAdmin+"')");
     QSqlQuery historiqueProducteur(txtHistoriqueProducteur);
     qDebug()<<txtHistoriqueProducteur;
+    historiqueProducteur.exec();
 
     ui->tableWidgetActivationProducteur->clear();
     ui->tableWidgetActivationProducteur->setRowCount(0);
@@ -294,6 +325,9 @@ void MainWindow::on_pushButtonActiver_clicked()
     // on recharge les tableaux
     chargerLesProducteurs();
     chargerLesProducteursEnAttente();
+
+    // on redésactive le bouton
+    ui->pushButtonActiver->setEnabled(0);
 }
 
 
@@ -323,16 +357,17 @@ void MainWindow::on_pushButtonDesactiver_clicked()
     QSqlQuery activationProducteur(txtDesactivationProducteur);
 
     QString txtMaxHistProd = "SELECT IFNULL(MAX(idHistProd)+1,1000) "
-                             "FROM historiqueProducteurs";
+                             "FROM historique";
     QSqlQuery maxHistProd(txtMaxHistProd);
     maxHistProd.first();
     qDebug()<<txtMaxHistProd;
 
     // requête pour stocker dans l'historique
-    QString txtHistoriqueProducteur("INSERT INTO historiqueProducteurs (idHistProd,idProducteur,idAdmin,dateAction,heureAction,actionEffectue) "
-                                    "VALUES ("+maxHistProd.value(0).toString()+","+ui->tableWidgetProducteurs->item(ui->tableWidgetProducteurs->currentRow(),0)->text()+","+idAdmin+",DATE(NOW()),TIME(NOW())),'Désactivation du producteur'");
+    QString txtHistoriqueProducteur("INSERT INTO historique(idHistProd,dateAction,heureAction,actionEffectue,nomUtil) "
+                                    "VALUES ("+maxHistProd.value(0).toString()+",DATE(NOW()),TIME(NOW()),'Désactivation du producteur n°"+ui->tableWidgetProducteurs->item(ui->tableWidgetProducteurs->currentRow(),0)->text()+" nommé "+ui->tableWidgetProducteurs->item(ui->tableWidgetProducteurs->currentRow(),1)->text()+" "+ui->tableWidgetProducteurs->item(ui->tableWidgetProducteurs->currentRow(),2)->text()+"','"+idAdmin+"')");
     QSqlQuery historiqueProducteur(txtHistoriqueProducteur);
     qDebug()<<txtHistoriqueProducteur;
+    historiqueProducteur.exec();
 
     ui->tableWidgetActivationProducteur->clear();
     ui->tableWidgetActivationProducteur->setRowCount(0);
@@ -346,6 +381,9 @@ void MainWindow::on_pushButtonDesactiver_clicked()
     // on recharge les tableaux
     chargerLesProducteurs();
     chargerLesProducteursEnAttente();
+
+    // on redésactive le bouton
+    ui->pushButtonDesactiver->setEnabled(0);
 }
 
 void MainWindow::on_tableWidgetActivationProducteur_cellClicked(int row, int column)

@@ -21,6 +21,7 @@ public:
     void chargerLesProducteurs();
     void chargerLesProducteursEnAttente();
     void chargerLesProduits();
+    void chargerLesLogs();
     void cacherLesLogs();
     void setTitres();
 
@@ -31,6 +32,8 @@ private slots:
     void on_tableWidgetProducteurs_cellClicked(int row, int column);
 
     void on_pushButtonDesactiver_clicked();
+
+    void on_tableWidgetActivationProducteur_cellClicked(int row, int column);
 
 private:
     Ui::MainWindow *ui;

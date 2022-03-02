@@ -10,6 +10,9 @@
     <height>631</height>
    </rect>
   </property>
+  <property name="focusPolicy">
+   <enum>Qt::TabFocus</enum>
+  </property>
   <property name="windowTitle">
    <string>Gestion projetAgriculture</string>
   </property>
@@ -98,7 +101,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="tabBarAutoHide">
        <bool>false</bool>
@@ -352,7 +355,7 @@
           <item>
            <widget class="QPushButton" name="pushButtonDesactiver">
             <property name="text">
-             <string>Désactiver</string>
+             <string>&amp;Désactiver</string>
             </property>
            </widget>
           </item>
@@ -409,7 +412,7 @@
           <item>
            <widget class="QPushButton" name="pushButtonActiver">
             <property name="text">
-             <string>Activer</string>
+             <string>&amp;Activer</string>
             </property>
            </widget>
           </item>
@@ -533,7 +536,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
-         <widget class="QTableWidget" name="tableWidget"/>
+         <widget class="QTableWidget" name="tableWidgetHistProducteurs"/>
         </item>
        </layout>
       </widget>
