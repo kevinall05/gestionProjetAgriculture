@@ -35,6 +35,10 @@ private slots:
 
     void on_tableWidgetActivationProducteur_cellClicked(int row, int column);
 
+    void on_tableWidgetRayons_cellClicked(int row, int column);
+
+    void on_pushButtonModifRayon_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString idAdmin;

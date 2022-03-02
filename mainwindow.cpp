@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "connexion.h"
 #include <QSqlQuery>
+#include <QSqlError>
 #include <QDebug>
 
 /**
@@ -43,6 +44,14 @@ MainWindow::MainWindow(QString noProd,QWidget *parent) :
     chargerLesProducteurs();
     chargerLesProducteursEnAttente();
     chargerLesProduits();
+
+    // on cache les colonnes non nécessaires pour l'utilisateur
+    ui->tableWidgetRayons->setColumnHidden(0,1);
+    ui->tableWidgetVarietes->setColumnHidden(0,1);
+    ui->tableWidgetProduits->setColumnHidden(0,1);
+    ui->tableWidgetProducteurs->setColumnHidden(0,1);
+    ui->tableWidgetActivationProducteur->setColumnHidden(0,1);
+    ui->tableWidgetHistProducteurs->setColumnHidden(0,1);
 }
 
 /**
@@ -298,7 +307,6 @@ void MainWindow::on_pushButtonActiver_clicked()
     QString txtActivationProducteur("UPDATE Producteur "
                                     "SET estActif = 'O' "
                                     "WHERE numeroProducteur = "+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),0)->text());
-    qDebug()<<txtActivationProducteur;
     QSqlQuery activationProducteur(txtActivationProducteur);
 
     QString txtMaxHistProd = "SELECT IFNULL(MAX(idHistProd)+1,1000) "
@@ -310,7 +318,6 @@ void MainWindow::on_pushButtonActiver_clicked()
     QString txtHistoriqueProducteur("INSERT INTO historique(idHistProd,dateAction,heureAction,actionEffectue,nomUtil) "
                                     "VALUES ("+maxHistProd.value(0).toString()+",DATE(NOW()),TIME(NOW()),'Activation du producteur n°"+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),0)->text()+" nommé "+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),1)->text()+" "+ui->tableWidgetActivationProducteur->item(ui->tableWidgetActivationProducteur->currentRow(),2)->text()+"','"+idAdmin+"')");
     QSqlQuery historiqueProducteur(txtHistoriqueProducteur);
-    qDebug()<<txtHistoriqueProducteur;
     historiqueProducteur.exec();
 
     ui->tableWidgetActivationProducteur->clear();
@@ -391,3 +398,33 @@ void MainWindow::on_tableWidgetActivationProducteur_cellClicked(int row, int col
     // on active le bouton Activer
     ui->pushButtonActiver->setEnabled(1);
 }
+
+void MainWindow::on_tableWidgetRayons_cellClicked(int row, int column)
+{
+    // on met les champs sélectionnés dans les zones de saisies
+    ui->lineEditLibelleRayon->setText(ui->tableWidgetRayons->item(row,1)->text());
+}
+
+void MainWindow::on_pushButtonModifRayon_clicked()
+{
+    // si la saisie contient au moins 3 caractères
+    if(ui->lineEditLibelleRayon->text().count()>3) {
+        // on modifie le nom du rayon
+        QString txtUpdateRayon = "UPDATE Rayon "
+                                 "SET libelleRayon = '"+ui->lineEditLibelleRayon->text()+"' "
+                                 "WHERE numeroRayon = "+ui->tableWidgetRayons->item(ui->tableWidgetRayons->currentRow(),0)->text();
+        QSqlQuery updateRayon(txtUpdateRayon);
+        qDebug()<<txtUpdateRayon;
+
+        // on vérifie si la requête est exécutée
+        if(updateRayon.exec()) {
+            // on affiche un message à l'utilisateur
+            ui->statusBar->showMessage("Le changement a bien été pris en compte.",3000);
+            ui->tableWidgetRayons->setItem(ui->tableWidgetRayons->currentRow(),1,new QTableWidgetItem(ui->lineEditLibelleRayon->text()));
+        } else {
+            // on affiche l'erreur SQL
+            ui->statusBar->showMessage(updateRayon.lastError().text(),5000);
+        }
+    }
+}
+
