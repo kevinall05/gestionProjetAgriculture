@@ -6,14 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>793</width>
-    <height>631</height>
+    <width>941</width>
+    <height>776</height>
    </rect>
   </property>
   <property name="font">
-   <font>
-    <family>Dingbats</family>
-   </font>
+   <font/>
   </property>
   <property name="focusPolicy">
    <enum>Qt::TabFocus</enum>
@@ -454,11 +452,32 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QTableWidget" name="tableWidgetRayons">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Sunken</enum>
+          </property>
+          <property name="lineWidth">
+           <number>5</number>
+          </property>
+          <property name="midLineWidth">
+           <number>0</number>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="showGrid">
+           <bool>true</bool>
           </property>
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
@@ -491,6 +510,20 @@
            <widget class="QLineEdit" name="lineEditLibelleRayon"/>
           </item>
           <item>
+           <widget class="QLabel" name="labelPhoto">
+            <property name="text">
+             <string>Photo</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButtonChoisirImg">
+            <property name="text">
+             <string>Choisir</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_21">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -519,6 +552,13 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButtonAjtRayon">
+            <property name="text">
+             <string>Ajouter</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="pushButtonModifRayon">
@@ -553,7 +593,7 @@
       </widget>
       <widget class="QWidget" name="tabVarietes">
        <attribute name="title">
-        <string>Variété des produits</string>
+        <string>Variétés</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -665,6 +705,13 @@
            </spacer>
           </item>
           <item>
+           <widget class="QPushButton" name="pushButtonAjtVariete">
+            <property name="text">
+             <string>Ajouter</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="pushButtonModifVariete">
             <property name="text">
              <string>Modifier</string>
@@ -713,6 +760,50 @@
           </attribute>
          </widget>
         </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_15">
+          <item>
+           <spacer name="horizontalSpacer_30">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButtonModifVariete_2">
+            <property name="text">
+             <string>Modifier</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButtonSupprVariete_2">
+            <property name="text">
+             <string>Supprimer</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_29">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tabHistorique">
@@ -738,8 +829,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>793</width>
-     <height>24</height>
+     <width>941</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">

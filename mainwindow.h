@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QList>
+#include <QCheckBox>
 
 namespace Ui {
 class MainWindow;
@@ -24,6 +26,7 @@ public:
     void chargerLesLogs();
     void cacherLesLogs();
     void setTitres();
+    void remplirComboBoxVariete();
 
 private slots:
 
@@ -39,9 +42,18 @@ private slots:
 
     void on_pushButtonModifRayon_clicked();
 
+    void on_pushButtonSupprRayon_clicked();
+
+    void on_pushButtonAjtRayon_clicked();
+
+    void on_pushButtonChoisirImg_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString idAdmin;
+
+   QList<QString> listeNomRayonSuppr;
+   QList<QCheckBox *> listeRayonSuppr;
 };
 
 #endif // MAINWINDOW_H

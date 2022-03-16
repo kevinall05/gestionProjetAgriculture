@@ -4,6 +4,10 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
+#include <QCheckBox>
+#include <QMessageBox>
+#include <QPixmap>
+#include <QFileDialog>
 
 /**
  * @brief MainWindow::MainWindow
@@ -44,6 +48,7 @@ MainWindow::MainWindow(QString noProd,QWidget *parent) :
     chargerLesProducteurs();
     chargerLesProducteursEnAttente();
     chargerLesProduits();
+    remplirComboBoxVariete();
 
     // on cache les colonnes non nécessaires pour l'utilisateur
     ui->tableWidgetRayons->setColumnHidden(0,1);
@@ -116,10 +121,25 @@ void MainWindow::chargerLesRayons()
         ui->tableWidgetRayons->insertRow(compteur);
         ui->tableWidgetRayons->setItem(compteur,0,new QTableWidgetItem(requeteRayons.value("numeroRayon").toString()));
         ui->tableWidgetRayons->setItem(compteur,1,new QTableWidgetItem(requeteRayons.value("libelleRayon").toString()));
-        ui->tableWidgetRayons->setItem(compteur,2,new QTableWidgetItem(requeteRayons.value("imgRayon").toString()));
+
+        // création de l'image
+        QLabel* sonImage = new QLabel();
+        sonImage->setPixmap(QPixmap(requeteRayons.value("imgRayon").toString()));
+        sonImage->setScaledContents(true);
+        ui->tableWidgetRayons->setCellWidget(compteur,2,sonImage);
+
+        // création checkBox
+        QCheckBox* newCheckBox=new QCheckBox();
+        listeRayonSuppr.append(newCheckBox); // on ajoute à la liste
+        ui->tableWidgetRayons->setCellWidget(compteur,3,newCheckBox);
 
         compteur++;
     }
+
+    // pour le responsive
+    ui->tableWidgetRayons->resizeColumnsToContents();
+    ui->tableWidgetRayons->resizeRowsToContents();
+
 }
 
 void MainWindow::chargerLesVarietes()
@@ -274,7 +294,7 @@ void MainWindow::setTitres()
 
     // Rayons
     QStringList headersRayons;
-    headersRayons << "Numéro" << "Libellé";
+    headersRayons << "Numéro" << "Libellé" << "Image" << "Supprimer?";
     ui->tableWidgetRayons->setColumnCount(headersRayons.count());
     ui->tableWidgetRayons->setHorizontalHeaderLabels(headersRayons);
 
@@ -295,6 +315,21 @@ void MainWindow::setTitres()
     headersHistProducteurs << "Numéro" << "Date/heure" << "Action effectuée" << "Fait par";
     ui->tableWidgetHistProducteurs->setColumnCount(headersHistProducteurs.count());
     ui->tableWidgetHistProducteurs->setHorizontalHeaderLabels(headersHistProducteurs);
+}
+
+void MainWindow::remplirComboBoxVariete()
+{
+    qDebug()<<"void MainWindow::remplirComboBoxVariete()";
+
+    QString nomRayon,txtMaRequete;
+    txtMaRequete = "SELECT numeroRayon,libelleRayon FROM Rayon";
+    QSqlQuery maRequete(txtMaRequete);
+
+    while (maRequete.next())
+        {
+            nomRayon = maRequete.value("libelleRayon").toString();
+            ui->comboBoxVarieteRayon->addItem(nomRayon,maRequete.value("numeroRayon").toString());
+        }
 }
 
 
@@ -426,5 +461,106 @@ void MainWindow::on_pushButtonModifRayon_clicked()
             ui->statusBar->showMessage(updateRayon.lastError().text(),5000);
         }
     }
+}
+
+
+void MainWindow::on_pushButtonSupprRayon_clicked()
+{
+    qDebug()<<"void MainWindow::on_pushButtonSupprRayon_clicked()";
+
+    // création d'une fenêtre de confirmation
+    QMessageBox boxConfirmer;
+    boxConfirmer.setWindowTitle("Gestion projetAgriculture | Confirmation");
+    boxConfirmer.setText("Êtes-vous sûr de vouloir supprimer les rayons sélectionnés?");
+
+    // création des boutons
+    QPushButton *confirmButton = boxConfirmer.addButton(tr("Confirmer"), QMessageBox::ActionRole);
+    QPushButton *cancelButton = boxConfirmer.addButton(tr("Annuler"), QMessageBox::ActionRole);
+
+    boxConfirmer.exec();
+
+    if (boxConfirmer.clickedButton() == confirmButton) {
+        for(int compteur=ui->tableWidgetRayons->rowCount()-1;compteur>=0;compteur--) {
+            // on vérifie si la checkBox est cochée
+            if(((QCheckBox *)(ui->tableWidgetRayons->cellWidget(compteur,3)))->isChecked())
+            {
+                // l'utilisateur a validé
+                QString txtDeleteRayon = "DELETE FROM Rayon WHERE numeroRayon = "+ui->tableWidgetRayons->item(compteur,0)->text();
+                qDebug()<<"Suppression du rayon "+ui->tableWidgetRayons->item(compteur,1)->text();
+                QSqlQuery deleteRayon(txtDeleteRayon);
+                qDebug()<<txtDeleteRayon;
+
+                if(deleteRayon.exec()) {
+                    // on affiche un message à l'utilisateur
+                    ui->statusBar->showMessage("Le rayon a bien été supprimé.",3000);
+                    // on supprime la ligne
+                    ui->tableWidgetRayons->removeRow(compteur);
+                } else {
+                    // on affiche l'erreur SQL
+                    QString txtError = deleteRayon.lastError().text();
+
+                    // on vérifie si l'erreur est dû aux clés étrangères
+                    if(txtError.contains("foreign key")) {
+                        ui->statusBar->showMessage("Le rayon "+ui->tableWidgetRayons->item(ui->tableWidgetRayons->currentRow(),1)->text()+" n'est pas vide, impossible de le supprimer",5000);
+                    } else {
+                        ui->statusBar->showMessage(deleteRayon.lastError().text(),5000);
+                    }
+                }
+            }
+        }
+
+    } else if (boxConfirmer.clickedButton() == cancelButton) {
+        ui->statusBar->showMessage("Annulation de la suppression de rayon(s)");
+    }
+}
+
+
+void MainWindow::on_pushButtonAjtRayon_clicked()
+{
+    // on crée un rayon
+
+    // on récupère l'id max des rayons
+    QString txtGetMaxId = "SELECT IFNULL(MAX(numeroRayon)+1,0) FROM Rayon";
+    QSqlQuery getMaxId(txtGetMaxId);
+
+    // on exécute la requête
+    getMaxId.first();
+
+    // si la saisie est supérieure à 2 caractères
+    if(ui->lineEditLibelleRayon->text().count() > 2) {
+        // on rédige la requête d'insertion d'un rayon
+        QString txtAddRayon = "INSERT INTO Rayon (numeroRayon,libelleRayon,imgRayon) "
+                              "VALUES ("+getMaxId.value(0).toString()+",'"+ui->lineEditLibelleRayon->text()+"','"+ui->labelPhoto->property("srcImage").toString()+"')";
+        QSqlQuery addRayon;
+        qDebug()<<txtAddRayon;
+
+        // on vérifie l'exécution de la requête
+        if(addRayon.exec(txtAddRayon)) {
+            ui->statusBar->showMessage("La rayon a bien été ajouté.",4000);
+            ui->lineEditLibelleRayon->setText("");
+
+            ui->tableWidgetRayons->clear();
+            ui->tableWidgetRayons->setRowCount(0);
+
+            setTitres();
+            chargerLesRayons();
+        }
+    } else {
+        ui->statusBar->showMessage("Le libellé du rayon saisi n'est pas assez long.",4000);
+    }
+}
+
+
+void MainWindow::on_pushButtonChoisirImg_clicked()
+{
+    // création du lien de l'image
+    QString fichierImage = QFileDialog::getOpenFileName(this, tr("Open Image"), "/home/kallemand/projetAgriculture/img", tr("Image Files (*.png *.jpg *.jpeg)"));
+    // on la met au label pour pouvoir la voir
+    ui->labelPhoto->setPixmap(QPixmap(fichierImage));
+    // redimensionnement pour pas prendre trop de place
+    ui->labelPhoto->setMaximumHeight(50);
+    ui->labelPhoto->setMaximumWidth(100);
+    // on utilise une propriété pour pouvoir l'utiliser dans l'ajout d'un rayon
+    ui->labelPhoto->setProperty("srcImage",fichierImage);
 }
 
